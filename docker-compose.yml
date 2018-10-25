@@ -1,0 +1,14 @@
+version: '2'
+services:
+  vault:
+    image: vault:0.11.3
+    environment:
+      VAULT_LOCAL_CONFIG: '{"backend": {"file": {"path": "/vault/file"}}, "default_lease_ttl": "168h", "max_lease_ttl": "720h", "plugin_directory":"/plugin"}'
+      VAULT_DEV_ROOT_TOKEN_ID: 123qwe
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8200:8200"
+      - "8201:8201"
+    volumes:
+      - "./vault/plugin:/plugin"
