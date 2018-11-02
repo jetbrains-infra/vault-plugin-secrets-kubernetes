@@ -8,7 +8,7 @@ install:
 
 jobs:
   include:
-    - stage: test
+    - stage: Test
       script: make test
     - stage: Build and release
       script: make build
@@ -16,6 +16,7 @@ jobs:
         provider: releases
         api_key: $GITHUB_OAUTH_TOKEN
         skip_cleanup: true
+        file: vault/plugin/vault-plugin-secrets-k8s
         on:
           tags: true
 
