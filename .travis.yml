@@ -5,6 +5,17 @@ go:
 install:
   - go get github.com/Masterminds/glide
   - glide up -v
-script:
-  - make test
-  - make build
+
+jobs:
+  include:
+    - stage: test
+      script: make test
+    - stage: Build and release
+      script: make build
+      deploy:
+        provider: releases
+        api_key: $GITHUB_OAUTH_TOKEN
+        skip_cleanup: true
+        on:
+          tags: true
+
