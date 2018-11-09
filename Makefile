@@ -4,7 +4,7 @@ SHA256SUM=$(shell sha256sum vault/plugin/vault-plugin-secrets-k8s | awk {'print 
 PLUGIN_NAME=vault-plugin-secrets-k8s
 
 build:
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o vault/plugin/vault-plugin-secrets-k8s .
+	CGO_ENABLED=0 GOOS=linux go build -a -ldflags="-s -w" -installsuffix cgo -o vault/plugin/vault-plugin-secrets-k8s .
 
 login:
 	echo "123qwe" | vault login -
