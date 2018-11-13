@@ -1,0 +1,34 @@
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: deploy-bot
+rules:
+- apiGroups: [""]
+  resources:
+  - services
+  - configmaps
+  - secrets
+  - endpoints
+  - persistentvolumeclaims
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+- apiGroups: ["extensions"]
+  resources:
+  - ingresses
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - deployments
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources:
+  - statefulsets
+  - replicasets
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+- apiGroups: ["batch"]
+  resources:
+  - jobs
+  - cronjobs
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+
+

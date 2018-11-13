@@ -2,10 +2,103 @@
 Vault secrets manager plugin for kubernetes
 
 # Description
-TBD
+This is a Secret Manager plugin for Kubernetes. Instead of https://github.com/hashicorp/vault-plugin-auth-kubernetes this plugin add ability to generate kubernetes tokens with ttl.
+Secrets will be created for selected ServiceAccount.
+This plugin is useful for secure deployments, due to created tokens deleted after TTL and actually there are no tokens with higher privileges for namespace at rest time.
+
+## Limitations
+* Works only with RBAC
+* Creates only Secrets, you can't create ServceAccounts, Roles or RoleBindings through plugin
+* Main token rotation is not implemented yet
 
 # How to setup 
-TBD
+## Kubernetes part
+First of all we need to create special ServiceAccount, Role and RoleBinding. This Role have only access to create/get/delete Secrets.
+```bash
+$ kubectl create -f example/role.yaml               # Role
+$ kubectl create -f example/sa.yaml                 # ServiceAccount
+$ kubectl create -f example/rolebinding.yaml        # RoleBinding
+$ # Lets get all needed credentials
+$ kubectl describe sa vault
+...
+  Tokens:              vault-token-c8wgn <-- This is secret name
+...
+$ kubectl describe secret vault-token-c8wgn
+...
+Data
+====
+token: <SA token will be here>
+...
+$ export TOKEN=<SA token>
+$ kubectl get secret vault-token-c8wgn -o yaml
+... 
+data:
+  ca.crt: <one line of base64 encoded CA>
+...
+$ export MASTER_CA=<master CA>
+$ kubectl cluster-info
+  Kubernetes master is running at https://my-cluster-domain-name:6443 
+$ export MASTER_URL=https://my-cluster-domain-name:6443
+```
+After this step your should have:
+* Vault ServiceAccount token ```$TOKEN```
+* Kubernetes CA base64 encoded in one line string  ```$MASTER_CA```
+* Kubernetes API URL ```$MASTER_URL```
+
+## Vault part
+* First of all put plugin binary to your vault plugins directory (https://www.vaultproject.io/docs/configuration/index.html#plugin_directory)
+* Add and enable plugin
+```bash
+$ export PLUGIN_NAME=vault-plugin-secrets-k8s
+$ export SHA256SUM=$(sha256sum vault/plugin/vault-plugin-secrets-k8s | awk {'print $1'})
+$ vault login
+$ # Add pluging to catalog
+$ vault write sys/plugins/catalog/${PLUGIN_NAME} sha256="${SHA256SUM}" command=${PLUGIN_NAME} 
+$ # Enable plugin 
+$ vault secrets enable -path=k8s -plugin-name=${PLUGIN_NAME} plugin 
+$ vault secrets list    # Check for plugin in catalog 
+```
+* Configure plugin
+```bash
+$ vault write k8s/config token=${TOKEN} api-url=${MASTER_URL} CA=${MASTER_CA}
+$ vault read k8s/config
+```
+If write was succeeded, that means vault successfully check login to Kubernetes and we ready to use plugin.
+# How to use
+## Kubernetes part
+Create ServiceAccount with required Role
+```bash
+$ kubectl create -f example/deploy-bot-role.yaml               # Role
+$ kubectl create -f example/deploy-bot-sa.yaml                 # ServiceAccount
+$ kubectl create -f example/deploy-bot-rolebinding.yaml        # RoleBinding 
+$ cat deploy-bot-sa.yaml | grep name
+  name: deploy-bot  <-- Save SA name
+$ kubectl get sa deploy-bot -o yaml | grep namespace
+   namespace: my-namespace  <-- Save namespace name
+```
+## Vault part
+Notice: sa means ServiceAccount
+```bash
+$ vault write k8s/sa/deploy-bot namespace=my-namespace service-account-name=deploy-bot
+$ vault write k8s/secrets/deploy-bot ttl=60 # Create secret for deploy-bot with TTL 50 seconds
+```
+## Gettings help
+```bash
+$ vault path-help k8s/config
+$ vault path-help k8s/sa/name
+$ vault path-help k8s/secrets/name
+```
+
+# Work with multiple clusters and namespaces
+Just enable plugin with different paths:
+```bash
+$ vault secrets enable -path=us-west2 -plugin-name=${PLUGIN_NAME} plugin 
+$ vault secrets enable -path=us-east1 -plugin-name=${PLUGIN_NAME} plugin 
+```
+Use namespace name in plugin sa name
+```bash
+$ vault write k8s/sa/my-namespace-deploy-bot namespace=my-namespace service-account-name=deploy-bot
+```
 
 # How to build and run locally
 Requirements:
