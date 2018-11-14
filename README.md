@@ -15,9 +15,9 @@ This plugin is useful for secure deployments, due to created tokens deleted afte
 ## Kubernetes part
 First of all we need to create special ServiceAccount, Role and RoleBinding. This Role have only access to create/get/delete Secrets.
 ```bash
-$ kubectl create -f example/role.yaml               # ClusterRole
+$ kubectl create -f example/clusterrole.yaml               # ClusterRole
 $ kubectl create -f example/sa.yaml                 # ServiceAccount
-$ kubectl create -f example/rolebinding.yaml        # ClusterRoleBinding
+$ kubectl create -f example/clusterrolebinding.yaml        # ClusterRoleBinding
 $ # Lets get all needed credentials
 $ kubectl describe sa vault
 ...
