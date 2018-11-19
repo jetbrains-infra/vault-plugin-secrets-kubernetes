@@ -54,6 +54,17 @@ func getServiceAccount(ctx context.Context, name string, s logical.Storage) (*Se
 	return sa, nil
 }
 
+func pathServiceAccountsList(b *kubeBackend) *framework.Path {
+	return &framework.Path{
+		Pattern: fmt.Sprintf("%s/?$", saStoragePrefix),
+		Callbacks: map[logical.Operation]framework.OperationFunc{
+			logical.ListOperation: b.pathServiceAccountList,
+		},
+		HelpSynopsis:    pathServiceAccountHelpSyn,
+		HelpDescription: pathServiceAccountHelpDesc,
+	}
+}
+
 func pathServiceAccounts(b *kubeBackend) *framework.Path {
 	return &framework.Path{
 		Pattern: fmt.Sprintf("%s/%s", saStoragePrefix, framework.GenericNameRegex("name")),
@@ -75,7 +86,6 @@ func pathServiceAccounts(b *kubeBackend) *framework.Path {
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.DeleteOperation: b.pathServiceAccountDelete,
 			logical.ReadOperation:   b.pathServiceAccountRead,
-			// logical.CreateOperation: b.pathServiceAccountCreateUpdate,
 			logical.UpdateOperation: b.pathServiceAccountCreateUpdate,
 		},
 		HelpSynopsis:    pathServiceAccountHelpSyn,
@@ -83,7 +93,19 @@ func pathServiceAccounts(b *kubeBackend) *framework.Path {
 	}
 }
 
+func (b *kubeBackend) pathServiceAccountList(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	b.saMutex.RLock()
+	defer b.saMutex.RUnlock()
+	list, err := req.Storage.List(ctx, fmt.Sprintf("%s/", saStoragePrefix))
+	if err != nil {
+		return nil, err
+	}
+	return logical.ListResponse(list), nil
+}
+
 func (b *kubeBackend) pathServiceAccountCreateUpdate(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	b.saMutex.Lock()
+	defer b.saMutex.Unlock()
 	new := false
 	nameRaw, ok := d.GetOk("name")
 	if !ok {
@@ -126,6 +148,8 @@ func (b *kubeBackend) pathServiceAccountCreateUpdate(ctx context.Context, req *l
 }
 
 func (b *kubeBackend) pathServiceAccountRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	b.saMutex.RLock()
+	defer b.saMutex.RUnlock()
 	nameRaw, ok := d.GetOk("name")
 	if !ok {
 		return logical.ErrorResponse("name is required"), nil
@@ -141,6 +165,8 @@ func (b *kubeBackend) pathServiceAccountRead(ctx context.Context, req *logical.R
 }
 
 func (b *kubeBackend) pathServiceAccountDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	b.saMutex.Lock()
+	defer b.saMutex.Unlock()
 	nameRaw, ok := d.GetOk("name")
 	if !ok {
 		return logical.ErrorResponse("name is required"), nil

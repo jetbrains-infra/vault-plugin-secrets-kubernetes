@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/vault/logical"
@@ -11,6 +12,7 @@ import (
 type kubeBackend struct {
 	*framework.Backend
 	testMode bool
+	saMutex sync.RWMutex
 }
 
 // New creates and returns new instance of Kubernetes secrets manager backend
@@ -28,8 +30,8 @@ func New() *kubeBackend {
 		Paths: []*framework.Path{
 			pathConfig(&b),
 			pathServiceAccounts(&b),
+			pathServiceAccountsList(&b),
 			pathSecrets(&b),
-			// TODO P1 pathListRoles
 			// TODO P1 pathConfigRotateToken
 		},
 		Secrets: []*framework.Secret{
