@@ -26,7 +26,7 @@ func pathSecrets(b *kubeBackend) *framework.Path {
 		},
 		// ExistenceCheck: ,
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			//logical.ReadOperation: b.pathSecretsRead,
+			logical.ReadOperation: b.pathSecretsUpdate,
 			logical.UpdateOperation: b.pathSecretsUpdate,
 		},
 		HelpSynopsis:    pathSecretsHelpSyn,
@@ -35,6 +35,8 @@ func pathSecrets(b *kubeBackend) *framework.Path {
 }
 
 func (b *kubeBackend) pathSecretsUpdate(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	b.saMutex.Lock()
+	defer b.saMutex.Unlock()
 	saName := d.Get("name").(string)
 	sa, err := getServiceAccount(ctx, saName, req.Storage)
 	if err != nil {

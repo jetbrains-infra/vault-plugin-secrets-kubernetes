@@ -73,7 +73,7 @@ func (b *kubeBackend) pathConfigWrite(ctx context.Context, req *logical.Request,
 
 	if cfg == nil {
 		cfg = &config{
-			TTL:    time.Duration(3600 * time.Second),
+			TTL:    time.Duration(1800 * time.Second),
 			MaxTTL: time.Duration(3600 * time.Second),
 		}
 	}

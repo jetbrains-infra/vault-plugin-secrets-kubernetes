@@ -1,22 +1,10 @@
 language: go
 go:
-  - "1.11.x"
-
+- 1.11.x
 install:
-  - go get github.com/Masterminds/glide
-  - glide up -v
-
+- go get github.com/Masterminds/glide
+- glide up -v
 jobs:
   include:
-    - stage: Test
-      script: make test
-    - stage: Build and release
-      script: make build
-      deploy:
-        provider: releases
-        api_key: $GITHUB_OAUTH_TOKEN
-        skip_cleanup: true
-        file: vault/plugin/vault-plugin-secrets-k8s
-        on:
-          tags: true
-
+  - stage: Test
+    script: make test

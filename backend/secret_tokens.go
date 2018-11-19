@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -79,6 +80,7 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 
 	var token, namespace string
 	var CABase64 interface{}
+	var resp *v1.Secret
 
 	if !b.testMode {
 		clientSet, err := getClientSet(c)
@@ -89,13 +91,25 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 		if err != nil {
 			return nil, errwrap.Wrapf("Unable to create secret, {{err}}", err)
 		}
-		secretResp, err := clientSet.CoreV1().Secrets(sa.Namespace).Get(secret.Name, metav1.GetOptions{})
-		if err != nil {
-			return nil, errwrap.Wrapf("Unable to get secret, {{err}}", err)
+		// Do 5 tries to get secret, due to it may not generated after first try
+		for range []int{0, 1, 2, 3, 4} {
+			secretResp, err := clientSet.CoreV1().Secrets(sa.Namespace).Get(secret.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, errwrap.Wrapf("Unable to get secret, {{err}}", err)
+			}
+			if len(secretResp.Data) == 0 {
+				time.Sleep(time.Second)
+				continue
+			}
+			resp = secretResp
+			token = string(secretResp.Data["token"])
+			namespace = string(secretResp.Data["namespace"])
+			CABase64 = secretResp.Data["ca.crt"]
+			break
 		}
-		token = string(secretResp.Data["token"])
-		namespace = string(secretResp.Data["namespace"])
-		CABase64 = secretResp.Data["ca.crt"]
+		if resp == nil || len(resp.Data) == 0 {
+			return nil, errors.New("unable to get secret with 5 tries, Data was empty")
+		}
 	} else {
 		token = "test"
 		namespace = "test"

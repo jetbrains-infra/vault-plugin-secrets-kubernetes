@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/vault/logical"
 )
 
-func TestRoleCreate(t *testing.T) {
+func TestServiceAccountCreate(t *testing.T) {
 	b, s := getTestBackend(t)
 
 	request := &logical.Request{
@@ -42,7 +42,7 @@ func TestRoleCreate(t *testing.T) {
 	assertNoErrorRequest(t, b, request)
 }
 
-func TestRoleUpdate(t *testing.T) {
+func TestServiceAccountUpdate(t *testing.T) {
 	b, s := getTestBackend(t)
 
 	request := &logical.Request{
@@ -84,7 +84,41 @@ func TestRoleUpdate(t *testing.T) {
 	assertEquals(t, resp.Data["namespace"], "test1", "Namespace should not be updated")
 }
 
-func TestRoleReadNotFound(t *testing.T) {
+func TestServiceAccountList(t *testing.T) {
+	b, s := getTestBackend(t)
+
+	request := &logical.Request{
+		Operation: logical.ListOperation,
+		Path:      fmt.Sprintf("%s/", saStoragePrefix),
+		Storage: s,
+	}
+	resp := assertNoErrorRequest(t, b, request)
+	assertEquals(t, len(resp.Data), 0, "Freshly crested backend shouldn't contain any ServiceAccount bindings")
+
+	request = &logical.Request{
+		Operation: logical.UpdateOperation,
+		Path:      fmt.Sprintf("%s/test", saStoragePrefix),
+		Data: map[string]interface{}{
+			"namespace":            "test",
+			"service-account-name": "test",
+		},
+		Storage: s,
+	}
+	assertNoErrorRequest(t, b, request)
+
+	request = &logical.Request{
+		Operation: logical.ListOperation,
+		Path:      fmt.Sprintf("%s/", saStoragePrefix),
+		Storage: s,
+	}
+	resp = assertNoErrorRequest(t, b, request)
+	list := resp.Data["keys"].([]string)
+	assertEquals(t, list[0], "test", "First element from list /sa should be test, created above")
+	assertEquals(t, len(list), 1, "We create only one ServiceAccount, so list should return keys with len == 1")
+}
+
+
+func TestServiceAccountReadNotFound(t *testing.T) {
 	b, s := getTestBackend(t)
 
 	request := &logical.Request{
@@ -100,7 +134,7 @@ func TestRoleReadNotFound(t *testing.T) {
 	}
 }
 
-func TestRoleDelete(t *testing.T) {
+func TestServiceAccountDelete(t *testing.T) {
 	b, s := getTestBackend(t)
 
 	request := &logical.Request{

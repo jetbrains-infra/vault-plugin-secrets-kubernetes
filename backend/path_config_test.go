@@ -19,7 +19,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	expected := map[string]interface{}{
-		"ttl":     int64(3600),
+		"ttl":     int64(1800),
 		"max-ttl": int64(3600),
 		"api-url": "https://localhost:8443/",
 		"CA":      "aGVsbG8K",
