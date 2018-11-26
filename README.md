@@ -1,4 +1,4 @@
-# vault-plugin-secrets-k8s
+# vault-plugin-secrets-kubernetes
 Vault secrets manager plugin for kubernetes
 
 # Description
@@ -49,8 +49,8 @@ After this step your should have:
 * First of all put plugin binary to your vault plugins directory (https://www.vaultproject.io/docs/configuration/index.html#plugin_directory)
 * Add and enable plugin
 ```bash
-$ export PLUGIN_NAME=vault-plugin-secrets-k8s
-$ export SHA256SUM=$(sha256sum vault/plugin/vault-plugin-secrets-k8s | awk {'print $1'})
+$ export PLUGIN_NAME=vault-plugin-secrets-kubernetes
+$ export SHA256SUM=$(sha256sum vault/plugin/vault-plugin-secrets-kubernetes | awk {'print $1'})
 $ vault login
 $ # Add pluging to catalog
 $ vault write sys/plugins/catalog/${PLUGIN_NAME} sha256="${SHA256SUM}" command=${PLUGIN_NAME} 

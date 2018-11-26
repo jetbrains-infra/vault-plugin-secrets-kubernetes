@@ -1,10 +1,11 @@
 VAULT_ADDR=http://127.0.0.1:8200
 export VAULT_ADDR
-SHA256SUM=$(shell sha256sum vault/plugin/vault-plugin-secrets-k8s | awk {'print $$1'})
-PLUGIN_NAME=vault-plugin-secrets-k8s
+SHA256SUM=$(shell sha256sum vault/plugin/vault-plugin-secrets-kubernetes | awk {'print $$1'})
+PLUGIN_NAME=vault-plugin-secrets-kubernetes
 
 build:
-	CGO_ENABLED=0 GOOS=linux go build -a -ldflags="-s -w" -installsuffix cgo -o vault/plugin/vault-plugin-secrets-k8s .
+	CGO_ENABLED=0 GOOS=linux go build -a -ldflags="-s -w" -installsuffix cgo -o vault/plugin/${PLUGIN_NAME} .
+	#goupx vault/plugin/${PLUGIN_NAME}
 
 login:
 	echo "123qwe" | vault login -

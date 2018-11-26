@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/vault/helper/pluginutil"
 	"github.com/hashicorp/vault/logical/plugin"
-	"github.com/jetbrains-infra/vault-plugin-secrets-k8s/backend"
+	"github.com/jetbrains-infra/vault-plugin-secrets-kubernetes/backend"
 )
 
 func main() {
