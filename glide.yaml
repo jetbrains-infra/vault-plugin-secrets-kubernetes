@@ -1,4 +1,4 @@
-package: github.com/jetbrains-infra/vault-plugin-secrets-k8s
+package: github.com/jetbrains-infra/vault-plugin-secrets-kubernetes
 import:
 - package: github.com/grpc/grpc-go
   version: v1.14.0
