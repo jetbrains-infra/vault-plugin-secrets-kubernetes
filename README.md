@@ -2,9 +2,9 @@
 Vault secrets manager plugin for kubernetes
 
 # Description
-This is a Secret Manager plugin for Kubernetes. Instead of https://github.com/hashicorp/vault-plugin-auth-kubernetes this plugin add ability to generate kubernetes tokens with ttl.
+This is a Secret Manager plugin for Kubernetes. Instead of https://github.com/hashicorp/vault-plugin-auth-kubernetes this plugin adds ability to generate kubernetes tokens with ttl.
 Secrets will be created for selected ServiceAccount.
-This plugin is useful for secure deployments, due to created tokens deleted after TTL and actually there are no tokens with higher privileges for namespace at rest time.
+This plugin is useful for creating secure deployments, as the created tokens expire after TTL and actually there are no tokens with higher privileges for the namespace for the rest of the time.
 
 ## Limitations
 * Works only with RBAC
@@ -13,7 +13,7 @@ This plugin is useful for secure deployments, due to created tokens deleted afte
 
 # How to setup 
 ## Kubernetes part
-First of all we need to create special ServiceAccount, Role and RoleBinding. This Role have only access to create/get/delete Secrets.
+First of all we need to create special ServiceAccount, Role and RoleBinding. This Role has only access to create/get/delete Secrets.
 ```bash
 $ kubectl create -f example/clusterrole.yaml               # ClusterRole
 $ kubectl create -f example/sa.yaml                 # ServiceAccount
@@ -52,7 +52,7 @@ After this step your should have:
 $ export PLUGIN_NAME=vault-plugin-secrets-kubernetes
 $ export SHA256SUM=$(sha256sum vault/plugin/vault-plugin-secrets-kubernetes | awk {'print $1'})
 $ vault login
-$ # Add pluging to catalog
+$ # Add plugin to catalog
 $ vault write sys/plugins/catalog/${PLUGIN_NAME} sha256="${SHA256SUM}" command=${PLUGIN_NAME} 
 $ # Enable plugin 
 $ vault secrets enable -path=k8s -plugin-name=${PLUGIN_NAME} plugin 
@@ -63,7 +63,7 @@ $ vault secrets list    # Check for plugin in catalog
 $ vault write k8s/config token=${TOKEN} api-url=${MASTER_URL} CA=${MASTER_CA}
 $ vault read k8s/config
 ```
-If write was succeeded, that means vault successfully check login to Kubernetes and we ready to use plugin.
+If write was successful, that means vault successfully checked the login to Kubernetes and we ready to use the plugin.
 # How to use
 ## Kubernetes part
 Create ServiceAccount with required Role
@@ -102,7 +102,7 @@ $ vault write k8s/sa/my-namespace-deploy-bot namespace=my-namespace service-acco
 
 # How to build and run locally
 Requirements:
-* make sha256sum (apt-get install make coreutils)
+* make, sha256sum (apt-get install make coreutils)
 * golang ~1.10
 * docker
 * docker-compose
