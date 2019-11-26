@@ -2,7 +2,6 @@ package backend
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/hashicorp/vault/logical"
@@ -105,13 +104,6 @@ func (b *kubeBackend) pathConfigWrite(ctx context.Context, req *logical.Request,
 		cfg.MaxTTL = time.Duration(maxTTLRaw.(int)) * time.Second
 	}
 
-	if !b.testMode {
-		err = validateConfig(cfg)
-		if err != nil {
-			return logical.ErrorResponse(fmt.Sprintf("Unable to configure, validation error, %s,", err)), nil
-		}
-	}
-
 	entry, err := logical.StorageEntryJSON("config", cfg)
 	if err != nil {
 		return nil, err
@@ -122,15 +114,6 @@ func (b *kubeBackend) pathConfigWrite(ctx context.Context, req *logical.Request,
 	}
 
 	return nil, nil
-}
-
-func validateConfig(c *config) error {
-	cs, err := getClientSet(c)
-	if err != nil {
-		return err
-	}
-	_, err = cs.ServerVersion()
-	return err
 }
 
 type config struct {
