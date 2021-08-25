@@ -5,9 +5,7 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/vault/helper/logging"
-	"github.com/hashicorp/vault/logical"
+	"github.com/hashicorp/vault/sdk/logical"
 )
 
 const (
@@ -19,7 +17,6 @@ func getTestBackend(t *testing.T) (logical.Backend, logical.Storage) {
 	b := New()
 
 	c := &logical.BackendConfig{
-		Logger: logging.NewVaultLogger(log.Trace),
 		System: &logical.StaticSystemView{
 			DefaultLeaseTTLVal: defaultLeaseTTLHr * time.Hour,
 			MaxLeaseTTLVal:     maxLeaseTTLHr * time.Hour,

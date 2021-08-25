@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/hashicorp/vault/logical"
-	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/sdk/framework"
+	"github.com/hashicorp/vault/sdk/logical"
 )
 
 func pathConfig(b *kubeBackend) *framework.Path {
@@ -37,6 +37,7 @@ func pathConfig(b *kubeBackend) *framework.Path {
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.ReadOperation:   b.pathConfigRead,
 			logical.UpdateOperation: b.pathConfigWrite,
+			logical.DeleteOperation: b.pathConfigDelete,
 		},
 
 		HelpSynopsis:    pathConfigHelpSyn,
@@ -72,8 +73,8 @@ func (b *kubeBackend) pathConfigWrite(ctx context.Context, req *logical.Request,
 
 	if cfg == nil {
 		cfg = &config{
-			TTL:    time.Duration(1800 * time.Second),
-			MaxTTL: time.Duration(3600 * time.Second),
+			TTL:    1800 * time.Second,
+			MaxTTL: 3600 * time.Second,
 		}
 	}
 
@@ -110,6 +111,14 @@ func (b *kubeBackend) pathConfigWrite(ctx context.Context, req *logical.Request,
 	}
 
 	if err := req.Storage.Put(ctx, entry); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func (b *kubeBackend) pathConfigDelete(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	if err := req.Storage.Delete(ctx, "config") ;err != nil {
 		return nil, err
 	}
 

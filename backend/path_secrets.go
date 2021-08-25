@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/vault/logical"
-	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/sdk/framework"
+	"github.com/hashicorp/vault/sdk/logical"
 )
 
 const secretsStoragePrefix = "secrets"
@@ -26,7 +26,7 @@ func pathSecrets(b *kubeBackend) *framework.Path {
 		},
 		// ExistenceCheck: ,
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ReadOperation: b.pathSecretsUpdate,
+			logical.ReadOperation:   b.pathSecretsUpdate,
 			logical.UpdateOperation: b.pathSecretsUpdate,
 		},
 		HelpSynopsis:    pathSecretsHelpSyn,

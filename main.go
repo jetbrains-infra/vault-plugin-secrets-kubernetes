@@ -1,16 +1,18 @@
 package main
 
 import (
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/vault/sdk/plugin"
+	"github.com/jetbrains-infra/vault-plugin-secrets-kubernetes/backend"
+
 	"log"
 	"os"
 
-	"github.com/hashicorp/vault/helper/pluginutil"
-	"github.com/hashicorp/vault/logical/plugin"
-	"github.com/jetbrains-infra/vault-plugin-secrets-kubernetes/backend"
+	"github.com/hashicorp/vault/api"
 )
 
 func main() {
-	apiClientMeta := &pluginutil.APIClientMeta{}
+	apiClientMeta := &api.PluginAPIClientMeta{}
 	flags := apiClientMeta.FlagSet()
 	err := flags.Parse(os.Args[1:])
 	if err != nil {
@@ -18,12 +20,16 @@ func main() {
 	}
 
 	tlsConfig := apiClientMeta.GetTLSConfig()
-	tlsProviderFunc := pluginutil.VaultPluginTLSProvider(tlsConfig)
+	tlsProviderFunc := api.VaultPluginTLSProvider(tlsConfig)
 
-	if err := plugin.Serve(&plugin.ServeOpts{
+	err = plugin.Serve(&plugin.ServeOpts{
 		BackendFactoryFunc: backend.Factory,
 		TLSProviderFunc:    tlsProviderFunc,
-	}); err != nil {
-		log.Fatal(err)
+	})
+	if err != nil {
+		logger := hclog.New(&hclog.LoggerOptions{})
+
+		logger.Error("plugin shutting down", "error", err)
+		os.Exit(1)
 	}
 }

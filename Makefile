@@ -18,11 +18,17 @@ enable-plugin:
 	vault secrets list
 
 list-plugins:
-	vault list sys/plugins/catalog
+	vault read sys/plugins/catalog
 
 configure-plugin:
 	vault write k8s/config token=${TOKEN} api-url=${MASTER_URL} CA=${MASTER_CA}
 	vault read k8s/config
+
+create-sa:
+	vault write k8s/sa/it-deployer namespace=it service-account-name=deployer
+
+get-token:
+	vault read k8s/secrets/it-deployer
 
 up:
 	docker-compose down
