@@ -8,9 +8,12 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
+const ConfigStorageKey = "config"
+const ConfigPath = "config"
+
 func pathConfig(b *kubeBackend) *framework.Path {
 	return &framework.Path{
-		Pattern: "config",
+		Pattern: ConfigPath,
 		Fields: map[string]*framework.FieldSchema{
 			"token": {
 				Type:        framework.TypeString,
@@ -105,7 +108,7 @@ func (b *kubeBackend) pathConfigWrite(ctx context.Context, req *logical.Request,
 		cfg.MaxTTL = time.Duration(maxTTLRaw.(int)) * time.Second
 	}
 
-	entry, err := logical.StorageEntryJSON("config", cfg)
+	entry, err := logical.StorageEntryJSON(ConfigStorageKey, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +121,7 @@ func (b *kubeBackend) pathConfigWrite(ctx context.Context, req *logical.Request,
 }
 
 func (b *kubeBackend) pathConfigDelete(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
-	if err := req.Storage.Delete(ctx, "config") ;err != nil {
+	if err := req.Storage.Delete(ctx, ConfigStorageKey); err != nil {
 		return nil, err
 	}
 
@@ -136,7 +139,7 @@ type config struct {
 
 func getConfig(ctx context.Context, s logical.Storage) (*config, error) {
 	var cfg config
-	cfgRaw, err := s.Get(ctx, "config")
+	cfgRaw, err := s.Get(ctx, ConfigStorageKey)
 	if err != nil {
 		return nil, err
 	}

@@ -12,7 +12,3 @@ services:
       - "8201:8201"
     volumes:
       - "./vault/plugin:/plugin"
-  #plugin:
-    #image: vault-plugin-secrets-kubernetes
-    #build:
-      #context: .

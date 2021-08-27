@@ -85,13 +85,13 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 		if err != nil {
 			return nil, err
 		}
-		_, err = clientSet.CoreV1().Secrets(sa.Namespace).Create(context.TODO(), secret, metav1.CreateOptions{})
+		_, err = clientSet.CoreV1().Secrets(sa.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 		if err != nil {
 			return nil, errwrap.Wrapf("Unable to create secret, {{err}}", err)
 		}
 		// Do 5 tries to get secret, due to it may not generated after first try
 		for range []int{0, 1, 2, 3, 4} {
-			secretResp, err := clientSet.CoreV1().Secrets(sa.Namespace).Get(context.TODO(), secret.Name, metav1.GetOptions{})
+			secretResp, err := clientSet.CoreV1().Secrets(sa.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 			if err != nil {
 				return nil, errwrap.Wrapf("Unable to get secret, {{err}}", err)
 			}
@@ -169,7 +169,7 @@ func (b *kubeBackend) secretAccessTokenRevoke(ctx context.Context, req *logical.
 	namespace := req.Secret.InternalData["namespace"].(string)
 	name := req.Secret.InternalData["secret-name"].(string)
 
-	err = clientSet.CoreV1().Secrets(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+	err = clientSet.CoreV1().Secrets(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 
 	if err != nil {
 		return nil, err
