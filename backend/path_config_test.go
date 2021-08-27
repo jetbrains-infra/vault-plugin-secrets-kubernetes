@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/vault/logical"
+	"github.com/hashicorp/vault/sdk/logical"
 )
 
 func TestConfig(t *testing.T) {

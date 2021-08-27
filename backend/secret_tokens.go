@@ -9,12 +9,10 @@ import (
 
 	"github.com/hashicorp/errwrap"
 
-	"github.com/hashicorp/vault/helper/consts"
-
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/hashicorp/vault/logical"
-	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/sdk/framework"
+	"github.com/hashicorp/vault/sdk/logical"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -87,13 +85,13 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 		if err != nil {
 			return nil, err
 		}
-		_, err = clientSet.CoreV1().Secrets(sa.Namespace).Create(secret)
+		_, err = clientSet.CoreV1().Secrets(sa.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 		if err != nil {
 			return nil, errwrap.Wrapf("Unable to create secret, {{err}}", err)
 		}
 		// Do 5 tries to get secret, due to it may not generated after first try
 		for range []int{0, 1, 2, 3, 4} {
-			secretResp, err := clientSet.CoreV1().Secrets(sa.Namespace).Get(secret.Name, metav1.GetOptions{})
+			secretResp, err := clientSet.CoreV1().Secrets(sa.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 			if err != nil {
 				return nil, errwrap.Wrapf("Unable to get secret, {{err}}", err)
 			}
@@ -171,7 +169,7 @@ func (b *kubeBackend) secretAccessTokenRevoke(ctx context.Context, req *logical.
 	namespace := req.Secret.InternalData["namespace"].(string)
 	name := req.Secret.InternalData["secret-name"].(string)
 
-	err = clientSet.CoreV1().Secrets(namespace).Delete(name, &metav1.DeleteOptions{})
+	err = clientSet.CoreV1().Secrets(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 
 	if err != nil {
 		return nil, err
@@ -180,10 +178,6 @@ func (b *kubeBackend) secretAccessTokenRevoke(ctx context.Context, req *logical.
 }
 
 func (b *kubeBackend) walRollback(ctx context.Context, r *logical.Request, kind string, data interface{}) error {
-	// TODO hashicorp what is this?
-	if !b.System().LocalMount() && b.System().ReplicationState().HasState(consts.ReplicationPerformancePrimary) {
-		return nil
-	}
 	var entry walSecret
 	if err := mapstructure.Decode(data, &entry); err != nil {
 		return err
