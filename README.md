@@ -109,7 +109,6 @@ Requirements:
 * vault CLI utility
 
 ```bash
-$ glide up -v
 $ make test
 $ make build up init-plugin
 $ VAULT_ADDR=http://127.0.0.1:8200 vault login  # token = 123qwe
