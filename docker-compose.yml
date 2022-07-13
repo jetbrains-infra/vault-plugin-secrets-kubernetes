@@ -7,8 +7,9 @@ services:
       VAULT_DEV_ROOT_TOKEN_ID: 123qwe
     cap_add:
       - IPC_LOCK
-    ports:
-      - "8200:8200"
-      - "8201:8201"
+    network_mode: host
+    # ports:
+    #   - "8200:8200"
+    #   - "8201:8201"
     volumes:
       - "./vault/plugin:/plugin"

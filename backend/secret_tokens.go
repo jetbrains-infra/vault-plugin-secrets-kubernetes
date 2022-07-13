@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
 	"k8s.io/api/core/v1"
+	errorsK8S "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -92,8 +93,9 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 		// Do 5 tries to get secret, due to it may not generated after first try
 		for range []int{0, 1, 2, 3, 4} {
 			secretResp, err := clientSet.CoreV1().Secrets(sa.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
-			if err != nil {
-				return nil, errwrap.Wrapf("Unable to get secret, {{err}}", err)
+			if errorsK8S.IsNotFound(err) {
+				time.Sleep(time.Second)
+				continue
 			}
 			if len(secretResp.Data) == 0 {
 				time.Sleep(time.Second)
