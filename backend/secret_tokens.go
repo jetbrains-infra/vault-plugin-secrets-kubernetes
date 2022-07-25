@@ -7,8 +7,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/hashicorp/errwrap"
-
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -55,7 +53,6 @@ type walSecret struct {
 
 func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *config, sa *ServiceAccount) (*logical.Response, error) {
 	name := fmt.Sprintf("%s-%s-%s", secretPrefix, sa.ServiceAccountName, generatePostfix(8))
-
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
@@ -88,7 +85,7 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 		}
 		_, err = clientSet.CoreV1().Secrets(sa.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 		if err != nil {
-			return nil, errwrap.Wrapf("Unable to create secret, {{err}}", err)
+			return nil, fmt.Errorf("Unable to create secret, %s", err)
 		}
 		// Do 5 tries to get secret, due to it may not generated after first try
 		for range []int{0, 1, 2, 3, 4} {
@@ -120,7 +117,7 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 	// the secret because it'll get rolled back anyways, so we have to return
 	// an error here.
 	if err := framework.DeleteWAL(ctx, s, walID); err != nil {
-		return nil, errwrap.Wrapf("failed to commit WAL entry: {{err}}", err)
+		return nil, fmt.Errorf("failed to commit WAL entry: %s", err)
 	}
 
 	return b.Secret(secretTypeAccessToken).Response(map[string]interface{}{

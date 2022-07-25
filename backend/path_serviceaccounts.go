@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
 )
@@ -174,7 +173,7 @@ func (b *kubeBackend) pathServiceAccountDelete(ctx context.Context, req *logical
 	name := nameRaw.(string)
 	sa, err := getServiceAccount(ctx, name, req.Storage)
 	if err != nil {
-		return nil, errwrap.Wrapf(fmt.Sprintf("unable to get sa '%s': {{err}}", name), err)
+		return nil, fmt.Errorf("unable to get sa '%s': %s", name, err)
 	}
 	if sa == nil {
 		return nil, nil

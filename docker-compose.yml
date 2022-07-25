@@ -1,15 +1,22 @@
 version: '3'
 services:
   vault:
-    image: vault:1.3.10
+    image: vault:1.9.2
     environment:
       VAULT_LOCAL_CONFIG: '{"backend": {"file": {"path": "/vault/file"}}, "default_lease_ttl": "168h", "max_lease_ttl": "720h", "plugin_directory":"/plugin"}'
       VAULT_DEV_ROOT_TOKEN_ID: 123qwe
+      VAULT_PLUGIN_LOG_PATH: /tmp/vault-k8s.log
     cap_add:
       - IPC_LOCK
     network_mode: host
-    # ports:
-    #   - "8200:8200"
-    #   - "8201:8201"
+#    networks:
+#      - minikube
+#    ports:
+#       - "8200:8200"
+#       - "8201:8201"
     volumes:
       - "./vault/plugin:/plugin"
+#networks:
+#  minikube:
+#    driver: bridge
+#    external: true

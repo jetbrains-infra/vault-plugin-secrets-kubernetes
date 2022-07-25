@@ -7,13 +7,12 @@ import (
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
-
 )
 
 type kubeBackend struct {
 	*framework.Backend
 	testMode bool
-	saMutex sync.RWMutex
+	saMutex  sync.RWMutex
 }
 
 // New creates and returns new instance of Kubernetes secrets manager backend
