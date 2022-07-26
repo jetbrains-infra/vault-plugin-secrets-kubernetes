@@ -2,8 +2,7 @@ package backend
 
 import (
 	"encoding/base64"
-
-	"github.com/hashicorp/errwrap"
+	"fmt"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -12,7 +11,7 @@ import (
 func getClientSet(c *config) (*kubernetes.Clientset, error) {
 	data, err := base64.StdEncoding.DecodeString(c.CA)
 	if err != nil {
-		return nil, errwrap.Wrapf("Unable to create kubernetes client, unable to decode CA '{{err}}'", err)
+		return nil, fmt.Errorf("unable to create kubernetes client, unable to decode CA: %s", err)
 	}
 
 	clientConf := &rest.Config{
@@ -24,7 +23,7 @@ func getClientSet(c *config) (*kubernetes.Clientset, error) {
 	}
 	clientset, err := kubernetes.NewForConfig(clientConf)
 	if err != nil {
-		return nil, errwrap.Wrapf("Unable to create kubernetes client '{{err}}'", err)
+		return nil, fmt.Errorf("unable to create kubernetes client: %s", err)
 	}
 	return clientset, nil
 }

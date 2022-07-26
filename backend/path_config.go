@@ -124,7 +124,6 @@ func (b *kubeBackend) pathConfigDelete(ctx context.Context, req *logical.Request
 	if err := req.Storage.Delete(ctx, ConfigStorageKey); err != nil {
 		return nil, err
 	}
-
 	return nil, nil
 }
 
