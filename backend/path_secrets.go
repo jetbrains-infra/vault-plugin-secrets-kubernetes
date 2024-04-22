@@ -35,11 +35,11 @@ func pathSecrets(b *kubeBackend) *framework.Path {
 }
 
 func (b *kubeBackend) pathSecretsUpdate(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-  b.log.Info("Trying to take a saMutex.Lock()", "", "") 
+  b.log.Debug("Trying to take a saMutex.Lock()", "", "") 
 	b.saMutex.Lock()
 	defer b.saMutex.Unlock()
 	saName := d.Get("name").(string)
-  b.log.Info("Get(saName)", "return", saName) 
+  b.log.Debug("Get(saName)", "return", saName) 
 	sa, err := getServiceAccount(ctx, saName, req.Storage)
 	if err != nil {
     b.log.Error("Unable to getServiceAccount", "err", err) 
@@ -72,7 +72,7 @@ func (b *kubeBackend) pathSecretsUpdate(ctx context.Context, req *logical.Reques
 		ttl = int64(config.TTL.Seconds())
 	}
 
-  b.log.Info("Output of ttl", "ttl", ttl) 
+  b.log.Debug("Output of ttl", "ttl", ttl) 
 
 	resp, err := b.createSecret(ctx, req.Storage, config, sa)
 	if err != nil {
