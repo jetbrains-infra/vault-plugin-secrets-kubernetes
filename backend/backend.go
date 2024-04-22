@@ -5,15 +5,16 @@ import (
 	"sync"
 	"time"
 
+	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
-
 )
 
 type kubeBackend struct {
 	*framework.Backend
 	testMode bool
-	saMutex sync.RWMutex
+	saMutex  sync.RWMutex
+	log      hclog.Logger
 }
 
 // New creates and returns new instance of Kubernetes secrets manager backend
@@ -45,11 +46,14 @@ func New() *kubeBackend {
 	return &b
 }
 
-// Factory creates and returns new backend with BackendConfig
-func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
-	b := New()
-	if err := b.Setup(ctx, c); err != nil {
-		return nil, err
+func NewFactory(log hclog.Logger) logical.Factory {
+	return func(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
+		b := New()
+    b.log = log
+
+		if err := b.Setup(ctx, c); err != nil {
+			return nil, err
+		}
+		return b, nil
 	}
-	return b, nil
 }
