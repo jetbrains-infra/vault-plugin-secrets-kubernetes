@@ -35,13 +35,17 @@ func pathSecrets(b *kubeBackend) *framework.Path {
 }
 
 func (b *kubeBackend) pathSecretsUpdate(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+  b.log.Info("Trying to take a saMutex.Lock()", "", "") 
 	b.saMutex.Lock()
 	defer b.saMutex.Unlock()
 	saName := d.Get("name").(string)
+  b.log.Info("Get(saName)", "return", saName) 
 	sa, err := getServiceAccount(ctx, saName, req.Storage)
 	if err != nil {
+    b.log.Error("Unable to getServiceAccount", "err", err) 
 		return nil, err
 	}
+  b.log.Debug("getServiceAccount", "return", sa) 
 
 	if sa == nil {
 		return logical.ErrorResponse(fmt.Sprintf("ServiceAccount '%s' not found", saName)), nil
@@ -49,6 +53,7 @@ func (b *kubeBackend) pathSecretsUpdate(ctx context.Context, req *logical.Reques
 
 	config, err := getConfig(ctx, req.Storage)
 	if err != nil {
+    b.log.Error("getConfig", "err", err) 
 		return nil, err
 	}
 
@@ -67,8 +72,11 @@ func (b *kubeBackend) pathSecretsUpdate(ctx context.Context, req *logical.Reques
 		ttl = int64(config.TTL.Seconds())
 	}
 
+  b.log.Info("Output of ttl", "ttl", ttl) 
+
 	resp, err := b.createSecret(ctx, req.Storage, config, sa)
 	if err != nil {
+    b.log.Error("Unable to createSecret", "err", err) 
 		return nil, err
 	}
 	resp.Secret.TTL = time.Duration(ttl) * time.Second

@@ -7,13 +7,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/hashicorp/errwrap"
-
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,15 +26,15 @@ func secretAccessTokens(b *kubeBackend) *framework.Secret {
 	return &framework.Secret{
 		Type: secretTypeAccessToken,
 		Fields: map[string]*framework.FieldSchema{
-			"token": &framework.FieldSchema{
+			"token": {
 				Type:        framework.TypeString,
 				Description: "Token of the secret",
 			},
-			"namespace": &framework.FieldSchema{
+			"namespace": {
 				Type:        framework.TypeString,
 				Description: "Namespace of the secret",
 			},
-			"ca": &framework.FieldSchema{
+			"ca": {
 				Type:        framework.TypeString,
 				Description: "CA of the api server",
 			},
@@ -87,15 +85,17 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 		}
 		_, err = clientSet.CoreV1().Secrets(sa.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 		if err != nil {
-			return nil, errwrap.Wrapf("Unable to create secret, {{err}}", err)
+			return nil, fmt.Errorf("Unable to create secret, %s", err)
 		}
 		// Do 5 tries to get secret, due to it may not generated after first try
 		for range []int{0, 1, 2, 3, 4} {
 			secretResp, err := clientSet.CoreV1().Secrets(sa.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 			if err != nil {
-				return nil, errwrap.Wrapf("Unable to get secret, {{err}}", err)
+				b.log.Error("Unable to get secret", "err", err)
+				return nil, fmt.Errorf("Unable to get secret, %s", err)
 			}
 			if len(secretResp.Data) == 0 {
+				b.log.Debug("recieved empty data, sleep a second before retry", "", "")
 				time.Sleep(time.Second)
 				continue
 			}
@@ -106,6 +106,7 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 			break
 		}
 		if resp == nil || len(resp.Data) == 0 {
+			b.log.Error("unable to get secret with 5 tries, Data was empty", "", "")
 			return nil, errors.New("unable to get secret with 5 tries, Data was empty")
 		}
 	} else {
@@ -118,8 +119,10 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 	// the secret because it'll get rolled back anyways, so we have to return
 	// an error here.
 	if err := framework.DeleteWAL(ctx, s, walID); err != nil {
-		return nil, errwrap.Wrapf("failed to commit WAL entry: {{err}}", err)
+		return nil, fmt.Errorf("failed to commit WAL entry: %s", err)
 	}
+
+  b.log.Debug("WAL removed", "", "")
 
 	return b.Secret(secretTypeAccessToken).Response(map[string]interface{}{
 		"token":     token,
@@ -129,10 +132,6 @@ func (b *kubeBackend) createSecret(ctx context.Context, s logical.Storage, c *co
 		"secret-name": name,
 		"namespace":   sa.Namespace,
 	}), nil
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 func generatePostfix(n int) string {
